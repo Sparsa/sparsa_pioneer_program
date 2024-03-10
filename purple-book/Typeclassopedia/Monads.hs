@@ -1,15 +1,20 @@
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+import Control.Applicative
+import Data.List
+import Data.Function
+import Data.Functor
 class Applicative m => Monad' m where
     return' :: a -> m a -- same as pure
     (>>=) :: m a -> (a -> m b) -> m b 
     (>>) :: m a ->  m b -> m b
-    m >> n = m Main.>>= \_ -> n  
+    m >> n = m >>= \_ -> n  
 -- Instance of Monad of []
 instance Monad' [] where
     return' :: a -> [a] 
     return' x = [x]
     (>>=) :: [a] -> (a -> [b]) -> [b]
-    (x:xs) >>= g = (g x) ++ (xs Main.>>= g)
+    (x:xs) >>= g = (g x) ++ (xs >>= g)
 
 -- Instance of Monad of ((->), e)
 instance Monad' ((->) e) where
@@ -47,7 +52,9 @@ instance Functor f => Applicative (Free f) where
     pure x = (Var x)
     (<*>) :: (Free f (a -> b)) -> (Free f a) -> (Free f b)
     (Var h) <*> (Var x) = (Var (h x))
-    
+    (Var h) <*> (Node xs) = fmap h (Node xs)
+  --  (Node sh) <*> (Node xs) = (fmap ($) (Node sh))
+
 
     
 instance Functor f => Monad' (Free f) where
@@ -55,7 +62,43 @@ instance Functor f => Monad' (Free f) where
     return' x = (Var x)
     (>>=) :: (Free f a) -> (a -> Free f b) -> (Free f b)
     (Var x) >>= g = (g x)
-    Node (xs) >>= g = Node (fmap (Main.>>= g) xs) 
+    Node (xs) >>= g = Node (fmap (>>= g) xs) 
 
-
+-- Monad Intuition exercises
+-- Implement bind (>>=) with fmap and join
+class Applicative m => Monad'' m where
+    return :: a -> m a
+    join :: m (m a) -> (m a)
+    bind :: m a -> (a -> m b) -> m b
+    bind xs f = join (fmap f xs) -- definition of bind in terms of join and fmap
+    fmap' :: (a -> b) -> m a -> m b
+    fmap' f xs = bind xs (return.f) -- definition of fmap using bind and return
+    join' :: m (m a) -> (m a) 
+    join' xs = bind xs id -- definition of join using bind 
     
+
+--Implemnt Join and fmap interms of bind
+-- fmap :: Monad' m => (a -> b) -> m a -> m b
+-- fmap f xs = 
+join'' :: (Monad' m) => m (m a) -> m a
+join'' m = m >>= id
+
+
+fmap'' :: (Monad' m) => (a -> b) -> m a -> m b
+fmap'' f m = m >>= (return . f)
+
+
+-- Exercises
+
+--     Implement join :: M (N (M (N a))) -> M (N a), given distrib :: N (M a) -> M (N a) and assuming M and N are instances of Monad.
+
+-- Assuming M and N monads, so they will have their version of fmap_N and fmap_M respectively.
+-- Also they should have their version of Join_M and Join_N respectively.
+
+-- joinM :: Monad' m => Monad' n => m(n(m(n a))) -> m (n a)
+-- distrib ::Monad' m => Monad' n n (m a) -> m (n a)
+-- -- fmap_M distrib M(N(M(N a)))  = M(M(N(N a))) 
+-- -- join_M fmap_M distrib M(N(M(N a))) = M (N (N a))
+-- joinM x =  fmap join ( join (fmap distrib x)) 
+-- -- Is this correct?
+

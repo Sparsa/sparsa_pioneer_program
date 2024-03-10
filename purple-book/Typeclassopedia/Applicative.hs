@@ -1,10 +1,18 @@
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+
+import Data.Functor
+--import Control.Applicative
+import Data.List
+import Data.Function
+import Data.Foldable
+import GHC.Maybe
 class Functor f => Applicative' f where
     pure' :: a -> f a 
     infixl 4 <*>, *> 
     (<*>) :: f (a -> b) -> f a -> f b -- this is normal functor
     (*> ) :: f a -> f b -> f b
-    a1 *> a2 = (id <$ a1) Main.<*> a2
+    a1 *> a2 = (id <$ a1) <*> a2
 
 --    (<*) :: f a -> f b  -> f a      
 --    (<*) = liftA2 const
@@ -36,12 +44,24 @@ instance Applicative' Maybe where
 
 sequenceAL :: Applicative' f => [f a] -> f [a]
 sequenceAL  [] = pure' []    
-sequenceAL (x:xs) = pure' (:)  Main.<*> x Main.<*> sequenceAL xs 
+--sequenceAL (x:xs) = pure' (:)  <*> x <*> sequenceAL xs 
 
+sequenceAL (x:xs) = foldr (\ x -> (<*>) (pure' (:) <*> x)) (pure' []) xs
 -- alternate definition of applicative
 
 class Functor f => Monoidal f where
     unit :: f ()
     (**) :: f a -> f b -> f (a,b)
 
-
+-- Implementing the List data type in functor and applicative
+data List a = Cons a (List a) | Nil
+instance Functor List  where
+    fmap :: (a -> b) -> (List a) -> (List b)
+    fmap _ Nil = Nil
+    fmap f (Cons x xs) = (Cons (f x) (fmap f xs))
+instance Applicative' List  where
+    (<*>) :: List ( a -> b) -> List a -> List b 
+    (<*>) _ Nil =  Nil
+    (<*>) (Cons g gs) (Cons x xs) = (Cons (g x) ((<*>) gs xs))
+    pure' :: a -> List a
+    pure' x = List x
