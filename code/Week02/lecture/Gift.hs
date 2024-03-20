@@ -14,6 +14,7 @@ import           Utilities            (writeValidatorToFile)
 -------------------------------- ON-CHAIN CODE / VALIDATOR ----------------------------------------
 
 -- This validator always succeeds
+--                  UTxO            consuming TX    Old TX with all IO
 --                    Datum         Redeemer     ScriptContext
 mkGiftValidator :: BuiltinData -> BuiltinData -> BuiltinData -> ()
 mkGiftValidator _ _ _ = ()
