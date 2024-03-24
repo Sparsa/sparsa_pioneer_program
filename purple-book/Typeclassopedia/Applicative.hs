@@ -78,15 +78,21 @@ sequenceAL  [] = pure []
 sequenceAL (xs) = foldr (  liftA2 (:))   (pure []) (xs) 
 -- alternate definition of applicative
 
+-- implement pure and <*> in terms of unit and (**)
 class Functor f => Monoidal f where
     unit :: f ()
     (**) :: f a -> f b -> f (a,b)
-    -- pure:: a -> f a
-    --pure x = unit ** x  
-    --(<*>) :: f(a -> b) -> f a -> f b 
+    newpure:: a -> f a
+    newpure x = (**) unit x   
+    --(<*>) :: f (a -> b) -> f a -> f b -- to avoid multple definition 
+    app:: f (a -> b) -> f a -> f b -- to avoid multple definition 
+    app f g =  fmap (uncarry $) f ** g -- was implementing just f**g, then took help to understand uncarry
 
 
--- implement pure and <*> in terms of unit and (**)
+-- Implentation of unit and ** using pure and <*>
+unit' = pure' ()
+fs newapp xs = pure' (,) <*> fs <*> xs -- impleentation of ** using pure and <*>
+
 
 
 
@@ -112,4 +118,7 @@ instance Applicative' List where
     (<*>) _ Nil = Nil
     (<*>) Nil _ = Nil
     (<*>) (Cons f fs) xs = append (fmap f xs ) (fs <*> xs)
+
+
+
 

@@ -34,11 +34,34 @@ instance Applicative Pair' where
     pure x = Pair' x x 
     (<*>) :: (Pair' (a ->  b)) -> Pair' a -> Pair' b 
     (Pair' g h) <*> (Pair' x y)=  (Pair' (g x) (g y)) 
+
+
 instance Monad' Pair' where
     return' :: a -> Pair' a
     return' x = Pair' x x
     (>>=) :: Pair' a -> ( a -> Pair' b) -> (Pair' b)
     Pair' x y >>= f = f x  
+{- Laws of Monads
+return a >>= k  =  k a
+m >>= return    =  m
+m >>= (\x -> k x >>= h)  =  (m >>= k) >>= h
+-}
+-- Proof that the implementation of bind (>>=) for pair is lawful
+-- first law
+-- return x >>= k 
+-- => Pair x x >>= k 
+-- => k x 
+-- second law
+-- m >>= return = m 
+-- Pair x x >>= return 
+-- => return x 
+-- => Pair x x 
+-- third law:
+-- m >>= (\x -> k x >>= h) 
+-- => Pair x x >>= (\x -> k x >>= h)
+-- => (\x ->k x >>= h) Pair x x 
+-- => k (Pair x x) >>= h
+-- => (Pair x x >>= k) >>= h -- from the definition of >>= for pair. Hence proved.
 -- Implementation of monad of Free
 data Free f a = Var a  
  | Node (f (Free f a)) 
