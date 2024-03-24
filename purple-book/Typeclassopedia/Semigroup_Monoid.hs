@@ -15,6 +15,7 @@ data Either a b = Right a | Left b
 
 instance Monoid a => Monoid (Maybe a) where  -- had to assume that a is also an monoid.
     mempty = Nothing
+    mappend :: Monoid a => Maybe a -> Maybe a -> Maybe a
     mappend Nothing _ = Nothing
     mappend _ Nothing = Nothing
     mappend (Just x) (Just y) = Just (mappend x y)

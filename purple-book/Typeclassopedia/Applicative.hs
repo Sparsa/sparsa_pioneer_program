@@ -93,7 +93,20 @@ class Functor f => Monoidal f where
 unit' = pure' ()
 fs newapp xs = pure' (,) <*> fs <*> xs -- impleentation of ** using pure and <*>
 
-
+--3 . Tricky) Prove that given your implementations from the first exercise, 
+-- the usual Applicative laws and the Monoidal laws stated above are equivalent.
+-- unit ** v = pure (,) <*> unit <*> v
+--           = pure (,) <*> pure () <*> v
+--           = pure ((),) <*> v
+--           = pure ((),v)  === v
+-- v ** unit = pure (,) <*> v <*> unit
+--           = pure (,) <*> v <*> pure ()
+--           = pure (v,) <*> pure ()
+--           = pure (v,()) === v
+-- u ** (v ** w) = pure (,) <*> u <*> (pure (,) <*> v <*> w)
+--               = pure (,) <*> pure $ (,) <*> u <*> v <*> w
+--               = pure (,) <*> (u ** v) <*> w
+--               = (u ** v) <*> w
 
 
 -- Implementing the List data type in functor and applicative
@@ -120,5 +133,13 @@ instance Applicative' List where
     (<*>) (Cons f fs) xs = append (fmap f xs ) (fs <*> xs)
 
 
+-- prove that pure f <*> x = pure (flip ($)) <*> x <*> pure f
 
-
+-- pure (flip ($)) <*> x <*> pure f                  =
+-- (pure (flip ($)) <*> x) <*> pure f                =
+-- pure ($ f) <*> (pure (flip ($)) <*> x)            =
+-- pure (.) <*> pure ($ f) <*> pure (flip ($)) <*> x = 
+-- pure ((.) ($ f)) <*> pure (flip ($)) <*> x        =
+-- pure ((.) ($ f) (flip ($))) <*> x                 =
+-- pure (($ f) . flip ($)) <*> x                     =
+-- pure f <*> x

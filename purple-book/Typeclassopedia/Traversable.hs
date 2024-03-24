@@ -66,6 +66,8 @@ listToTree = foldr (treeConcat.toListTree) Empty
 
 traverse' :: (Applicative f, Traversable t) => (a -> f b) -> t a -> f (t b)
 traverse' f = sequenceA .fmap f
+traverseT :: Applicative f => (a -> f b) -> t a -> f (t b)
+traverseT = undefined -- You don't need to define this.
 
 sequenceA' :: (Applicative f, Traversable t) => t (f a) -> f (t a)
 sequenceA' = traverse' id
