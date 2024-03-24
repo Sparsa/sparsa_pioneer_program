@@ -118,10 +118,23 @@ fmap'' f m = m >>= (return . f)
 -- Assuming M and N monads, so they will have their version of fmap_N and fmap_M respectively.
 -- Also they should have their version of Join_M and Join_N respectively.
 
--- joinM :: Monad' m => Monad' n => m(n(m(n a))) -> m (n a)
--- distrib ::Monad' m => Monad' n n (m a) -> m (n a)
--- -- fmap_M distrib M(N(M(N a)))  = M(M(N(N a))) 
--- -- join_M fmap_M distrib M(N(M(N a))) = M (N (N a))
--- joinM x =  fmap join ( join (fmap distrib x)) 
+--joinM :: Monad' m => Monad' n => m(n(m(n a))) -> m (n a)
+-- distrib ::Monad' m => Monad' n => n (m a) -> m (n a)
+-- -- fmap_M distrib M(N(M(N a)))  = M(M(N(N a))) -- this swaps the M and N in the second and third level
+-- -- join_M fmap_M distrib M(N(M(N a))) = M (N (N a)) -- then applying Join will remove the first M from the top layer.
+--joinM x =  fmap join ( join (fmap distrib x)) -- now use fmap and join to remove the N from the second layer.
 -- -- Is this correct?
 
+{- Given the definition g >=> h = \x -> g x >>= h, prove the equivalence of the above laws and the usual monad laws. -}
+-- return >=> g 
+-- => \x -> return x >>= g -- from the definition above 
+-- => return >>= g -- \x -> return x == return
+-- => g -- from first law of monads \qed
+
+-- g >=> return 
+-- => \x -> g x >>= return -- applying the definition above
+-- \x -> gx -- applying 2nd law of monad 
+-- g -- from the lambda calculus \qed
+
+-- (g >=> h)  >=> k 
+-- => 
