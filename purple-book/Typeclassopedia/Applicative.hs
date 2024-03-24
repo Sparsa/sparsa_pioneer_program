@@ -7,27 +7,34 @@ import Data.List
 import Data.Function
 import Data.Foldable
 import GHC.Maybe
+import Data.Either
+import GHC.Base(Applicative,liftA2,pure)
 class Functor f => Applicative' f where
     pure' :: a -> f a 
     infixl 4 <*>, *> 
     (<*>) :: f (a -> b) -> f a -> f b -- this is normal functor
     (*> ) :: f a -> f b -> f b
     a1 *> a2 = (id <$ a1) <*> a2
-
---    (<*) :: f a -> f b  -> f a      
---    (<*) = liftA2 const
---
+    (<*) :: f a -> f b  -> f a      
+    (<*) = flip (*>) 
 newtype ZipList a = ZipList { getZipList :: [a]}
 instance Functor ZipList where
     fmap :: (a -> b ) -> ZipList a -> ZipList b
     fmap g (ZipList x) = ZipList (fmap g x)
 instance  Applicative' ZipList where
     pure' :: a -> ZipList a 
-    --pure' x = ZipList [x]
-    pure' x = getZipList x
+    pure' x = ZipList [x]
+    -- pure'  = getZipList  ?
     (<*>) :: ZipList (a -> b) -> ZipList a -> ZipList b
     (ZipList gs) <*> (ZipList xs)  = ZipList (zipWith ($) gs xs)
-
+-- implementation of Either
+instance Applicative' (Either e) where
+    pure':: a -> Either e a
+    pure' x = Right x
+    (<*>) :: (Either e (a -> b)) -> (Either e a) -> (Either e b)
+    (<*>) _ (Left x) = (Left x)
+    --(<*>) (Left f) (Right y) =  (Right  y)
+    (<*>) (Right f) (Right y) = (Right (f y))
 instance Applicative' [] where
     pure' :: a -> [a]
     pure' x = [x]
@@ -50,12 +57,12 @@ instance Functor (Either' e) where
     fmap :: (a->b) -> Either' e a -> Either' e b
     fmap _ (Left' x) = Left' x
     fmap g (Right' x) = Right' (g x)
-instance Applicative' (Either' e) where 
-    pure' :: a -> (Either' e a) 
-    pure' x = Right' x
-    (<*>):: (Either' e (a -> b)) -> (Either' e a) -> (Either' e b)
-    (<*>) (Right' f) (Right' x) = (Right' (f x))
-    (<*>) _  (Left' x)  = (Left' x)
+-- instance Applicative (Either' e) where 
+--     pure' :: a -> (Either' e a) 
+--     pure' x = Right' x
+--     (<*>):: (Either' e (a -> b)) -> (Either' e a) -> (Either' e b)
+--     (<*>) (Right' f) (Right' x) = (Right' (f x))
+--     (<*>) _  (Left' x)  = (Left' x)
 instance Applicative' Maybe where
     pure' :: a -> Maybe a
     pure' a = Just a
@@ -64,19 +71,30 @@ instance Applicative' Maybe where
     _ <*> Nothing = Nothing
     Just a <*> Just b = Just (a b)
  
-sequenceAL :: Applicative' f => [f a] -> f [a]
-sequenceAL  [] = pure' []    
---sequenceAL (x:xs) = pure' (:)  <*> x <*> sequenceAL xs 
+sequenceAL :: GHC.Base.Applicative f => [f a] -> f [a]
+sequenceAL  [] = pure []    
+-- sequenceAL (x:xs) = pure' (:)  <*> x <*> sequenceAL xs 
 
-sequenceAL (x:xs) = foldr (\ x -> (<*>) (pure' (:) <*> x)) (pure' []) xs
+sequenceAL (xs) = foldr (  liftA2 (:))   (pure []) (xs) 
 -- alternate definition of applicative
 
 class Functor f => Monoidal f where
     unit :: f ()
     (**) :: f a -> f b -> f (a,b)
+    -- pure:: a -> f a
+    --pure x = unit ** x  
+    --(<*>) :: f(a -> b) -> f a -> f b 
+
+
+-- implement pure and <*> in terms of unit and (**)
+
+
 
 -- Implementing the List data type in functor and applicative
 data List a = Cons a (List a) | Nil
+append:: List a -> List a -> List a
+append Nil xs = xs
+append (Cons x ys) xs = (Cons x (append ys xs))
 instance Functor List  where
     fmap :: (a -> b) -> (List a) -> (List b)
     fmap _ Nil = Nil
@@ -88,5 +106,10 @@ instance Functor List  where
 --     pure' :: a -> List a
 --     pure' x = Cons x (Nil)
 instance Applicative' List where
+    pure' :: a -> List a
+    pure' x = Cons x (Nil)
     (<*>):: List (a -> b) -> List a -> List b
     (<*>) _ Nil = Nil
+    (<*>) Nil _ = Nil
+    (<*>) (Cons f fs) xs = append (fmap f xs ) (fs <*> xs)
+
