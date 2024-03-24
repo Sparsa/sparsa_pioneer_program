@@ -12,9 +12,10 @@ import GHC.Base ( (++), foldr, Monad, Maybe(Nothing, Just) )
 import Data.Foldable (Foldable)
 import GHC.Show ( Show )
 import Prelude (foldMap)
-
+import GHC.Maybe(Maybe(..))
 data Tree a = Empty | Leaf a | Node (Tree a) a ( Tree a) deriving (Show)
-
+data BinaryTree a = BiLeaf (Maybe a) | BiNode (BinaryTree a) ( a) (BinaryTree a) deriving (Show)
+-- is it the correct way to define a binary tree with two constructor?
 t2 = Node (Leaf (Just 2)) (Just 4) (Node (Leaf (Just 5)) (Just 7) (Leaf (Just 8)))
 t3 = Node (Leaf (Just 2)) (Just 4) (Node (Leaf (Just 5)) (Just 7) (Leaf Nothing))
 listT = [t2,t3]
@@ -35,6 +36,10 @@ toListTree :: Tree a -> Tree [a]
 toListTree Empty = Empty
 toListTree (Leaf x) = Leaf [x]
 toListTree (Node xs x ys) = Node (toListTree xs)  [x]  (toListTree ys)
+toListTree' :: Functor Tree =>  Tree a -> Tree [a]
+toListTree' = fmap (: [])
+
+
 -- a function that concatenates two tree of lists.
 treeConcat :: Tree [a] -> Tree [a] -> Tree [a]
 treeConcat Empty Empty = Empty
