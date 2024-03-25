@@ -136,10 +136,11 @@ instance Applicative' List where
 -- prove that pure f <*> x = pure (flip ($)) <*> x <*> pure f
 
 -- pure (flip ($)) <*> x <*> pure f                  =
--- (pure (flip ($)) <*> x) <*> pure f                =
--- pure ($ f) <*> (pure (flip ($)) <*> x)            =
--- pure (.) <*> pure ($ f) <*> pure (flip ($)) <*> x = 
--- pure ((.) ($ f)) <*> pure (flip ($)) <*> x        =
--- pure ((.) ($ f) (flip ($))) <*> x                 =
--- pure (($ f) . flip ($)) <*> x                     =
--- pure f <*> x
+-- (pure (flip ($)) <*> x) <*> pure f                = -- associativity
+-- pure (\x -> x f) <*> (pure (flip ($)) <*> x)      = -- Interchange
+-- pure ($ f) <*> (pure (flip ($)) <*> x)            = ($ f) == (\x -> x f)
+-- pure (.) <*> pure ($ f) <*> pure (flip ($)) <*> x = --composition
+-- pure ((.) ($ f)) <*> pure (flip ($)) <*> x        = -- Homomorphism
+-- pure ((.) ($ f) (flip ($))) <*> x                 = -- Homomorphism
+-- pure (($ f) . flip ($)) <*> x                     = -- pre to in
+-- pure f <*> x                                      = -- 
