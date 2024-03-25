@@ -133,7 +133,7 @@ fmap'' f m = m >>= (return . f)
 
 -- g >=> return 
 -- => \x -> g x >>= return -- applying the definition above
--- \x -> gx -- applying 2nd law of monad 
+-- \x -> g x -- applying 2nd law of monad 
 -- g -- from the lambda calculus \qed
 
 -- (g >=> h)  >=> k 
