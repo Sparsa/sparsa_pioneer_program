@@ -1,4 +1,6 @@
-import Control.Monad (liftM)
+import Control.Monad (liftM,ap)
+import Control.Monad.Trans.Class
+
 data IdentityT m a = IdentityT (m a)
 data MaybeT m a = JustT (m a) | NothingT
 data ListT m a = ConsT (m a) (ListT m a) | NilT
@@ -43,10 +45,27 @@ instance Applicative m => Applicative (ListT m) where
     (<*>) (ConsT f mf) (ConsT x mx) = ConsT ((<*>) f x) ((<*>) mf mx) 
 -- Monoid 
 -- No instance of identity
-instance (Monoid m) => Monoid (MaybeT m a) where
-    mempty = NothingT 
-    mappend :: Monoid m => MaybeT m a -> MaybeT m a -> MaybeT m a
-    mappend NothingT _ = NothingT 
-    mappend _ NothingT = NothingT 
-    mappend (JustT xs) (JustT ys ) = JustT $ mappend xs ys 
+-- instance (Monoid m) => Monoid (MaybeT m a) where
+--     mempty = NothingT 
+--     mappend :: Monoid m => MaybeT m a -> MaybeT m a -> MaybeT m a
+--     mappend NothingT _ = NothingT 
+--     mappend _ NothingT = NothingT 
+--     mappend (JustT xs) (JustT ys ) = JustT $ mappend xs ys 
 
+-- Semigroup 
+-- instance (Semigroup m) => Semigroup (MaybeT m a) where
+--     (<>) :: (Semigroup m) => MaybeT m a -> MaybeT m a -> MaybeT m a 
+--     (<>) NothingT _ = NothingT
+--     (<>) _ NothingT = NothingT
+--     (<>) (JustT xs) (JustT ys) = JustT $ (<>) xs ys 
+
+-- Monad 
+instance MonadTrans (MaybeT) where 
+    lift :: Monad m => m a => (MaybeT m a)
+    lift = JustT 
+instance (Monad m ) => Monad (MaybeT m ) where 
+    return :: (Monad m) => a -> MaybeT m a 
+    return x = JustT (return x)
+    (>>=) :: (Monad m) => MaybeT m a -> (a -> MaybeT m b) -> MaybeT m b
+    (>>=) NothingT _ = NothingT
+    (>>=) (JustT mx) f = JustT $ (>>=) (lift f) mx

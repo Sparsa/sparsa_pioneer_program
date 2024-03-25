@@ -110,7 +110,9 @@ join'' m = m >>= id
 fmap'' :: (Monad' m) => (a -> b) -> m a -> m b
 fmap'' f m = m >>= (return . f)
 
-
+-- MonadTrans exercises
+-- What is the kind of t in the definition of MonadTrans
+-- (*->*)->*->*
 -- Exercises
 
 --     Implement join :: M (N (M (N a))) -> M (N a), given distrib :: N (M a) -> M (N a) and assuming M and N are instances of Monad.
