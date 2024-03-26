@@ -61,11 +61,11 @@ instance Applicative m => Applicative (ListT m) where
 
 -- Monad 
 instance MonadTrans (MaybeT) where 
-    lift :: Monad m => m a => (MaybeT m a)
+    lift :: Monad m => m a ->( MaybeT m a)
     lift = JustT 
 instance (Monad m ) => Monad (MaybeT m ) where 
     return :: (Monad m) => a -> MaybeT m a 
     return x = JustT (return x)
     (>>=) :: (Monad m) => MaybeT m a -> (a -> MaybeT m b) -> MaybeT m b
     (>>=) NothingT _ = NothingT
-    (>>=) (JustT mx) f = JustT $ (>>=) (lift f) mx
+    (>>=) (JustT mx) f =   lift f  mx
